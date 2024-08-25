@@ -25,16 +25,8 @@ class taskTray:
         self.running = False
 
         # アイコンの画像をデコード
-        self.white = Image.open(
-            io.BytesIO(
-                binascii.unhexlify(WHITE.replace('\n', '').strip())
-            )
-        )
-        self.red = Image.open(
-            io.BytesIO(
-                binascii.unhexlify(RED.replace('\n', '').strip())
-            )
-        )
+        self.white = Image.open(io.BytesIO(binascii.unhexlify(WHITE.replace('\n', '').strip())))
+        self.red = Image.open(io.BytesIO(binascii.unhexlify(RED.replace('\n', '').strip())))
         menu = Menu(
             MenuItem('Check', self.doCheck),
             MenuItem('Exit', self.stopApp),
@@ -47,17 +39,20 @@ class taskTray:
         r = requests.get(url)
         if r and r.status_code == 200:
             soup = BeautifulSoup(r.content, 'html.parser')
-            stat = soup.find_all('table')[1].find_all('tr')[-2].find_all('td')[1].text
-            title = f'{self.code} {stat}'
+            title = f'{self.code} 未登録'
             icon = self.white
-            if stat == 'お届け先にお届け済み':
-                if self.notified is False:
-                    self.notified = True
-                    notify(
-                        body=title,
-                        audio='ms-winsoundevent:Notification.Reminder',
-                    )
-                icon = self.red
+            st = soup.find_all('table')
+            if len(st) >= 2:
+                stat = st[1].find_all('tr')[-2].find_all('td')[1].text
+                title = f'{self.code} {stat}'
+                if stat == 'お届け先にお届け済み':
+                    if self.notified is False:
+                        self.notified = True
+                        notify(
+                            body=title,
+                            audio='ms-winsoundevent:Notification.Reminder',
+                        )
+                    icon = self.red
 
             self.app.title = title
             self.app.icon = icon
