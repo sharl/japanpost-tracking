@@ -36,27 +36,30 @@ class taskTray:
 
     def doCheck(self):
         url = f'https://trackings.post.japanpost.jp/services/srv/search/?requestNo1={self.code}&search=%E9%96%8B%E5%A7%8B&locale=ja'
-        r = requests.get(url)
-        if r and r.status_code == 200:
-            soup = BeautifulSoup(r.content, 'html.parser')
-            title = f'{self.code} 未登録'
-            icon = self.white
-            st = soup.find_all('table')
-            if len(st) >= 2:
-                stat = st[1].find_all('tr')[-2].find_all('td')[1].text
-                title = f'{self.code} {stat}'
-                if stat == 'お届け先にお届け済み':
-                    if self.notified is False:
-                        self.notified = True
-                        notify(
-                            body=title,
-                            audio='ms-winsoundevent:Notification.Reminder',
-                        )
-                    icon = self.red
+        try:
+            r = requests.get(url)
+            if r and r.status_code == 200:
+                soup = BeautifulSoup(r.content, 'html.parser')
+                title = f'{self.code} 未登録'
+                icon = self.white
+                st = soup.find_all('table')
+                if len(st) >= 2:
+                    stat = st[1].find_all('tr')[-2].find_all('td')[1].text
+                    title = f'{self.code} {stat}'
+                    if stat == 'お届け先にお届け済み':
+                        if self.notified is False:
+                            self.notified = True
+                            notify(
+                                body=title,
+                                audio='ms-winsoundevent:Notification.Reminder',
+                            )
+                        icon = self.red
 
-            self.app.title = title
-            self.app.icon = icon
-            self.app.update_menu()
+                self.app.title = title
+                self.app.icon = icon
+                self.app.update_menu()
+        except Exception:
+            pass
 
     def runSchedule(self):
         schedule.every(INTERVAL).seconds.do(self.doCheck)
