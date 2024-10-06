@@ -16,9 +16,9 @@ INTERVAL = 60
 
 
 class taskTray:
-    def __init__(self, code):
+    def __init__(self, codes):
         # 追跡番号
-        self.code = code
+        self.codes = codes
         # 通知済みフラグ
         self.notified = False
         # スレッド実行モード
@@ -35,17 +35,19 @@ class taskTray:
         self.doCheck()
 
     def doCheck(self):
-        url = f'https://trackings.post.japanpost.jp/services/srv/search/?requestNo1={self.code}&search=%E9%96%8B%E5%A7%8B&locale=ja'
-        try:
-            r = requests.get(url)
-            if r and r.status_code == 200:
+        lines = []
+        count = 0
+        icon = self.white
+
+        for code in self.codes:
+            url = f'https://trackings.post.japanpost.jp/services/srv/search/?requestNo1={code}&search=%E9%96%8B%E5%A7%8B&locale=ja'
+            with requests.get(url) as r:
                 soup = BeautifulSoup(r.content, 'html.parser')
-                title = f'{self.code} 未登録'
-                icon = self.white
+                title = f'{code} 未登録'
                 st = soup.find_all('table')
                 if len(st) >= 2:
                     stat = st[1].find_all('tr')[-2].find_all('td')[1].text
-                    title = f'{self.code} {stat}'
+                    title = f'{code} {stat}'
                     if stat == 'お届け先にお届け済み':
                         if self.notified is False:
                             self.notified = True
@@ -53,13 +55,15 @@ class taskTray:
                                 body=title,
                                 audio='ms-winsoundevent:Notification.Reminder',
                             )
-                        icon = self.red
+                        count = count + 1
+                lines.append(title)
 
-                self.app.title = title
-                self.app.icon = icon
-                self.app.update_menu()
-        except Exception:
-            pass
+        if count:
+            icon = self.red
+
+        self.app.title = '\n'.join(lines)
+        self.app.icon = icon
+        self.app.update_menu()
 
     def runSchedule(self):
         schedule.every(INTERVAL).seconds.do(self.doCheck)
@@ -113,10 +117,13 @@ b177418d5d01b1f7ae58b085af37b85cea7e9b97993d442454c84aa5aaba14779548444cf468d5f8
 """
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        code = sys.argv[1].replace('-', '')
-        if len(code) == 12 and str(int(code)) == code:
-            taskTray(code).runApp()
+    if len(sys.argv) > 1:
+        codes = []
+        for code in sys.argv[1:]:
+            code = code.replace('-', '')
+            if len(code) == 12 and str(int(code)) == code:
+                codes.append(code)
+        taskTray(codes).runApp()
     else:
-        print(f'{sys.argv[0]} <tracking code>')
+        print(f'{sys.argv[0]} <tracking code ...>')
         exit(1)
