@@ -19,6 +19,8 @@ class taskTray:
     def __init__(self, codes):
         # 追跡番号
         self.codes = codes
+        # 追跡番号の状況
+        self.status = {}
         # 通知済みフラグ
         self.notified = False
         # スレッド実行モード
@@ -56,6 +58,11 @@ class taskTray:
                                 audio='ms-winsoundevent:Notification.Reminder',
                             )
                         count = count + 1
+                if code not in self.status:
+                    self.status[code] = ''
+                if title != self.status[code]:
+                    print(title)
+                    self.status[code] = title
                 lines.append(title)
 
         if count:
