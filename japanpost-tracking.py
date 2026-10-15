@@ -46,9 +46,9 @@ class taskTray:
                 title = f'{code} 未登録'
                 st = soup.find_all('table')
                 if len(st) >= 2:
-                    stat = st[1].find_all('tr')[-2].find_all('td')[1].text
-                    title = f'{code} {stat}'
-                    if stat == 'お届け先にお届け済み':
+                    date, stat, _, loc, pref = st[1].find_all('tr')[-2].find_all('td')
+                    title = f'{code} {stat.text} {date.text} {loc.text}'
+                    if stat.text == 'お届け先にお届け済み':
                         if self.notified is False:
                             self.notified = True
                             notify(
