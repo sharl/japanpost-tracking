@@ -12,7 +12,7 @@ import requests
 from bs4 import BeautifulSoup
 from win11toast import notify
 
-INTERVAL = 60
+INTERVAL = 600
 
 
 class taskTray:
