@@ -1,5 +1,6 @@
+beautifulsoup4
+darkdetect
 schedule
 pystray
 requests
-bs4
 win11toast
