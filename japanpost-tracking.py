@@ -4,7 +4,6 @@ import ctypes
 import io
 import sys
 import threading
-import time
 
 from PIL import Image
 from bs4 import BeautifulSoup
@@ -32,7 +31,7 @@ class taskTray:
         # 通知済みフラグ
         self.notified = False
         # スレッド実行モード
-        self.running = False
+        self.stop_event = threading.Event()
 
         # アイコンの画像をデコード
         self.white = Image.open(io.BytesIO(binascii.unhexlify(WHITE.replace('\n', '').strip())))
@@ -83,16 +82,17 @@ class taskTray:
     def runSchedule(self):
         schedule.every(INTERVAL).seconds.do(self.doCheck)
 
-        while self.running:
+        while not self.stop_event.is_set():
             schedule.run_pending()
-            time.sleep(1)
+            if self.stop_event.wait(1):
+                break
 
     def stopApp(self):
-        self.running = False
+        self.stop_event.set()
         self.app.stop()
 
     def runApp(self):
-        self.running = True
+        self.stop_event.clear()
 
         task_thread = threading.Thread(target=self.runSchedule)
         task_thread.start()
